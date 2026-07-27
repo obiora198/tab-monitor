@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "Tab Monitor Scout",
+  "version": "1.0",
+  "description": "Monitors open tabs and memory usage, warning you when things get heavy.",
+  "permissions": [
+    "tabs",
+    "system.memory",
+    "nativeMessaging",
+    "notifications",
+    "storage"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Tab Monitor",
+    "default_icon": "icon.png"
+  },
+  "icons": {
+    "128": "icon.png"
+  },
+  "options_page": "options.html",
+  "host_permissions": []
+}
