@@ -193,6 +193,7 @@ async fn start_server(app: AppHandle) {
                                     
                                     // Show and position the window bottom right
                                     if let Some(window) = app_clone.get_webview_window("main") {
+                                        let _ = window.set_shadow(false);
                                         if let Ok(Some(monitor)) = window.current_monitor() {
                                             let monitor_size = monitor.size();
                                             let window_size = window.outer_size().unwrap_or_default();
