@@ -11,8 +11,8 @@
     "windows": [
       {
         "title": "Tab Monitor Warning",
-        "width": 420,
-        "height": 500,
+        "width": 800,
+        "height": 520,
         "decorations": false,
         "transparent": true,
         "alwaysOnTop": true,

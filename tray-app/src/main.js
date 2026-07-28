@@ -31,6 +31,40 @@ window.addEventListener("DOMContentLoaded", async () => {
   const desktopList = document.getElementById("desktopList");
   const desktopCountEl = document.getElementById("desktopCount");
 
+  // Avatar Images
+  const avatarImg = document.getElementById("avatarImg");
+  const warningAvatars = [
+    "./assets/point_at_you_bubble.png",
+    "./assets/point_at_tab_bubble.png"
+  ];
+  const successAvatar = "./assets/thumbs_up.png";
+
+  let currentAvatarIdx = 0;
+  let isSuccessState = false;
+  let avatarInterval = null;
+
+  function setAvatarImage(src) {
+    if (avatarImg && avatarImg.src !== src) {
+      avatarImg.style.opacity = "0.15";
+      setTimeout(() => {
+        avatarImg.src = src;
+        avatarImg.style.opacity = "1";
+      }, 200);
+    }
+  }
+
+  function startAvatarRotation() {
+    if (avatarInterval) clearInterval(avatarInterval);
+    avatarInterval = setInterval(() => {
+      if (!isSuccessState) {
+        currentAvatarIdx = (currentAvatarIdx + 1) % warningAvatars.length;
+        setAvatarImage(warningAvatars[currentAvatarIdx]);
+      }
+    }, 3500);
+  }
+
+  startAvatarRotation();
+
   // Accordion section toggles
   setupAccordion(suggestedHeader, suggestedContainer);
   setupAccordion(otherHeader, otherContainer);
@@ -60,13 +94,11 @@ window.addEventListener("DOMContentLoaded", async () => {
     const clamp = Math.max(0, Math.min(1, ratio));
     let r, g, b;
     if (clamp <= 0.5) {
-      // 0.0 (blue #89b4fa) -> 0.5 (green #a6e3a1)
       const t = clamp / 0.5;
       r = Math.round(137 + (166 - 137) * t);
       g = Math.round(180 + (227 - 180) * t);
       b = Math.round(250 + (161 - 250) * t);
     } else {
-      // 0.5 (green #a6e3a1) -> 1.0 (red #f38ba8)
       const t = (clamp - 0.5) / 0.5;
       r = Math.round(166 + (243 - 166) * t);
       g = Math.round(227 + (139 - 227) * t);
@@ -78,14 +110,20 @@ window.addEventListener("DOMContentLoaded", async () => {
   function updateProgressBar() {
     const remaining = Math.max(0, totalTabCount - selectedTabIds.size);
     const ratio = getBarRatio(remaining, totalTabCount, threshold);
-    const pct = Math.max(5, Math.round(ratio * 100)); // min 5% so bar is visible
+    const pct = Math.max(5, Math.round(ratio * 100));
 
     progressFill.style.width = pct + '%';
     progressFill.style.backgroundColor = getBarColor(ratio);
     
     if (remaining > threshold) {
+      if (isSuccessState) {
+        isSuccessState = false;
+        setAvatarImage(warningAvatars[currentAvatarIdx]);
+      }
       progressCount.textContent = `${remaining} tabs (${remaining - threshold} over threshold)`;
     } else {
+      isSuccessState = true;
+      setAvatarImage(successAvatar);
       progressCount.textContent = `${remaining} tabs remaining (Target reached!)`;
     }
 
@@ -131,7 +169,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     popout.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>';
 
     popout.addEventListener('click', (e) => {
-      e.stopPropagation(); // prevent checking/unchecking tab
+      e.stopPropagation();
       if (invoke) {
         invoke('focus_tab', { tabId: tab.id, windowId: tab.windowId }).catch(console.error);
       }
@@ -236,7 +274,6 @@ window.addEventListener("DOMContentLoaded", async () => {
       suggestedTabs.forEach(t => selectedTabIds.add(t.id));
     }
     
-    // Re-apply visual state to DOM elements
     const items = suggestedList.querySelectorAll('.tab-item');
     items.forEach(div => {
       const id = parseInt(div.dataset.tabId, 10);
@@ -288,6 +325,11 @@ window.addEventListener("DOMContentLoaded", async () => {
       otherTabs = data.otherTabs || [];
       desktopApps = data.desktopApps || [];
       renderAll();
+    });
+
+    await listen('tab-resolved', () => {
+      isSuccessState = true;
+      setAvatarImage(successAvatar);
     });
   } catch (err) {
     console.error("Frontend Error:", err);
