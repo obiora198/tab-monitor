@@ -31,15 +31,16 @@ Copy-Item "$RootDir\native-host\target\release\tabmonitor-host.exe" -Destination
 Copy-Item "$RootDir\tray-app\src-tauri\target\release\tray-app.exe" -Destination $DistDir
 
 # Copy Native Host Manifest
-$Manifest = Get-Content "$RootDir\native-host\com.tabmonitor.host.json" -Raw | ConvertFrom-Json
+$Manifest = Get-Content "$RootDir\native-host\manifest.json" -Raw | ConvertFrom-Json
 $Manifest.path = "tabmonitor-host.exe"
 $Manifest | ConvertTo-Json -Depth 5 | Set-Content "$DistDir\com.tabmonitor.host.json"
 
 # Copy Extension
 Copy-Item "$RootDir\extension" -Destination "$DistDir\extension" -Recurse -Force
 
-# Copy Install Script
+# Copy Install & Uninstall Scripts
 Copy-Item "$RootDir\installer\install.ps1" -Destination "$DistDir\install.ps1"
+Copy-Item "$RootDir\installer\uninstall.ps1" -Destination "$DistDir\uninstall.ps1"
 
 Write-Host "`n==========================================" -ForegroundColor Green
 Write-Host "   Distribution Package Ready!            " -ForegroundColor Green
