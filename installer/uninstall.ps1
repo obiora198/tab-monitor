@@ -30,3 +30,6 @@ Write-Host "`n==========================================" -ForegroundColor Green
 Write-Host "     Uninstallation Complete!             " -ForegroundColor Green
 Write-Host "==========================================" -ForegroundColor Green
 Write-Host "Tab Monitor has been completely removed from this PC." -ForegroundColor Cyan
+
+Write-Host "`n"
+Read-Host -Prompt "Press Enter to exit..."

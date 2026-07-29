@@ -1,9 +1,9 @@
 {
   "name": "com.tabmonitor.host",
   "description": "Tab Monitor Native Host",
-  "path": "C:\\Users\\USER\\Projects\\tab-monitor\\native-host\\target\\debug\\tabmonitor-host.exe",
+  "path": "tabmonitor-host.exe",
   "type": "stdio",
   "allowed_origins": [
-    "chrome-extension://eidlcjpfknfflmgepeifpkamphidgmah/"
+    "chrome-extension://lcjcnebnibfdgjglmaojjmbndkcfffki/"
   ]
 }

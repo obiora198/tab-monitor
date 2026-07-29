@@ -3,6 +3,7 @@
   "name": "Tab Monitor Scout",
   "version": "1.0",
   "description": "Monitors open tabs and memory usage, warning you when things get heavy.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA6cKeC+Zsd+iCMdZFClUc1Yrsu5lFqbWqzP2OZiGRgO1Ne8zpeQdp1By2vOQxp86OqTFN1ccPJHrxIf6NEjM+pPIcrQqn7KoFgPaTc/fgva81XB+MxOasPQEGZSyoeFJjKtnVtSHoKXPe7nU4kRH3HGEp4T5MldiAveo6xfj/hF/Y8pZfx0QgLsphDfMukWzlHDSEVCwkyyhTHXuKEAEACmURodA1aQ1PLEL9nt6gcMAYjFzEedJkarzL29ZVVAWSRDOFlHSSTQlY5Z9bwQ5J9BIaypqfqERcA60DSnrieGs13ND+gGDeLEslrf9R1opEQ/NfoFE+XeoYxSq+9wF3YQIDAQAB",
   "permissions": [
     "tabs",
     "system.memory",
