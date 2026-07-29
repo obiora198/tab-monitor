@@ -38,12 +38,15 @@ $Manifest | ConvertTo-Json -Depth 5 | Set-Content "$DistDir\com.tabmonitor.host.
 # Copy Extension
 Copy-Item "$RootDir\extension" -Destination "$DistDir\extension" -Recurse -Force
 
-# Copy Install & Uninstall Scripts
+# Copy Install & Uninstall Scripts (PS1 + BAT wrappers)
 Copy-Item "$RootDir\installer\install.ps1" -Destination "$DistDir\install.ps1"
 Copy-Item "$RootDir\installer\uninstall.ps1" -Destination "$DistDir\uninstall.ps1"
+Copy-Item "$RootDir\installer\Install Tab Monitor.bat" -Destination "$DistDir\Install Tab Monitor.bat"
+Copy-Item "$RootDir\installer\Uninstall Tab Monitor.bat" -Destination "$DistDir\Uninstall Tab Monitor.bat"
 
 Write-Host "`n==========================================" -ForegroundColor Green
 Write-Host "   Distribution Package Ready!            " -ForegroundColor Green
 Write-Host "==========================================" -ForegroundColor Green
 Write-Host "Folder path: $DistDir" -ForegroundColor White
-Write-Host "Simply copy the 'TabMonitor-Setup' folder to any Windows PC and run install.ps1!" -ForegroundColor Cyan
+Write-Host "Double-click 'Install Tab Monitor.bat' on any Windows PC!" -ForegroundColor Cyan
+
