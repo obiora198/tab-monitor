@@ -39,29 +39,26 @@ if (Test-Path $PolicyPath) {
     Write-Host "  No policy keys found." -ForegroundColor DarkGray
 }
 
-# 4. Restore Chrome Shortcuts (remove --load-extension flag)
+# 4. Restore Chrome Shortcuts (Direct paths only, no recursive scanning)
 Write-Host "[4/5] Restoring Chrome shortcuts..." -ForegroundColor Yellow
-$ShortcutLocations = @(
-    "$env:USERPROFILE\Desktop",
-    "$env:PUBLIC\Desktop",
-    "$env:APPDATA\Microsoft\Windows\Start Menu\Programs",
-    "$env:PROGRAMDATA\Microsoft\Windows\Start Menu\Programs",
-    "$env:APPDATA\Microsoft\Internet Explorer\Quick Launch\User Pinned\TaskBar"
+$TargetShortcuts = @(
+    "$env:USERPROFILE\Desktop\Google Chrome.lnk",
+    "$env:PUBLIC\Desktop\Google Chrome.lnk",
+    "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Google Chrome.lnk",
+    "$env:PROGRAMDATA\Microsoft\Windows\Start Menu\Programs\Google Chrome.lnk"
 )
 
-foreach ($Location in $ShortcutLocations) {
-    if (Test-Path $Location) {
-        Get-ChildItem -Path $Location -Filter "*Chrome*.lnk" -Recurse -ErrorAction SilentlyContinue | ForEach-Object {
-            try {
-                $WScriptShell = New-Object -ComObject WScript.Shell
-                $Sc = $WScriptShell.CreateShortcut($_.FullName)
-                if ($Sc.Arguments -like "*--load-extension*") {
-                    $Sc.Arguments = ($Sc.Arguments -replace '--load-extension="[^"]*"\s*', '').Trim()
-                    $Sc.Save()
-                    Write-Host "  Restored: $($_.Name)" -ForegroundColor Gray
-                }
-            } catch {}
-        }
+foreach ($ShortcutFile in $TargetShortcuts) {
+    if (Test-Path $ShortcutFile) {
+        try {
+            $WScriptShell = New-Object -ComObject WScript.Shell
+            $Sc = $WScriptShell.CreateShortcut($ShortcutFile)
+            if ($Sc.Arguments -like "*--load-extension*") {
+                $Sc.Arguments = ($Sc.Arguments -replace '--load-extension="[^"]*"\s*', '').Trim()
+                $Sc.Save()
+                Write-Host "  Restored: $(Split-Path $ShortcutFile -Leaf)" -ForegroundColor Gray
+            }
+        } catch {}
     }
 }
 

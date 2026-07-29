@@ -60,33 +60,30 @@ Write-Host "  Chrome policy configured." -ForegroundColor Green
 
 Write-Host "[4/5] Updating Chrome Shortcuts with Extension Flag..." -ForegroundColor Yellow
 $ShortcutUpdated = $false
-$ShortcutLocations = @(
-    "$env:USERPROFILE\Desktop",
-    "$env:PUBLIC\Desktop",
-    "$env:APPDATA\Microsoft\Windows\Start Menu\Programs",
-    "$env:PROGRAMDATA\Microsoft\Windows\Start Menu\Programs",
-    "$env:APPDATA\Microsoft\Internet Explorer\Quick Launch\User Pinned\TaskBar"
+$TargetShortcuts = @(
+    "$env:USERPROFILE\Desktop\Google Chrome.lnk",
+    "$env:PUBLIC\Desktop\Google Chrome.lnk",
+    "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Google Chrome.lnk",
+    "$env:PROGRAMDATA\Microsoft\Windows\Start Menu\Programs\Google Chrome.lnk"
 )
 
-foreach ($Location in $ShortcutLocations) {
-    if (Test-Path $Location) {
-        Get-ChildItem -Path $Location -Filter "*Chrome*.lnk" -Recurse -ErrorAction SilentlyContinue | ForEach-Object {
-            try {
-                $WScriptShell = New-Object -ComObject WScript.Shell
-                $Sc = $WScriptShell.CreateShortcut($_.FullName)
-                if ($Sc.TargetPath -like "*chrome.exe*") {
-                    if ($Sc.Arguments -notlike "*--load-extension*") {
-                        $Sc.Arguments = "--load-extension=`"$ExtensionDir`" " + $Sc.Arguments
-                        $Sc.Save()
-                        Write-Host "  Updated: $($_.FullName)" -ForegroundColor Gray
-                        $ShortcutUpdated = $true
-                    } else {
-                        Write-Host "  Already configured: $($_.Name)" -ForegroundColor DarkGray
-                    }
+foreach ($ShortcutFile in $TargetShortcuts) {
+    if (Test-Path $ShortcutFile) {
+        try {
+            $WScriptShell = New-Object -ComObject WScript.Shell
+            $Sc = $WScriptShell.CreateShortcut($ShortcutFile)
+            if ($Sc.TargetPath -like "*chrome.exe*") {
+                if ($Sc.Arguments -notlike "*--load-extension*") {
+                    $Sc.Arguments = "--load-extension=`"$ExtensionDir`" " + $Sc.Arguments
+                    $Sc.Save()
+                    Write-Host "  Updated: $(Split-Path $ShortcutFile -Leaf)" -ForegroundColor Gray
+                    $ShortcutUpdated = $true
+                } else {
+                    Write-Host "  Already configured: $(Split-Path $ShortcutFile -Leaf)" -ForegroundColor DarkGray
                 }
-            } catch {
-                Write-Host "  Could not update: $($_.Name) - $_" -ForegroundColor DarkYellow
             }
+        } catch {
+            Write-Host "  Could not update: $(Split-Path $ShortcutFile -Leaf) - $_" -ForegroundColor DarkYellow
         }
     }
 }
@@ -119,22 +116,27 @@ $ChromePath = "${env:ProgramFiles}\Google\Chrome\Application\chrome.exe"
 if (-not (Test-Path $ChromePath)) {
     $ChromePath = "${env:ProgramFiles(x86)}\Google\Chrome\Application\chrome.exe"
 }
+if (-not (Test-Path $ChromePath)) {
+    $ChromePath = "$env:LOCALAPPDATA\Google\Chrome\Application\chrome.exe"
+}
 
 if (Test-Path $ChromePath) {
     Write-Host "`n  Closing Chrome to apply extension..." -ForegroundColor Yellow
-    Get-Process -Name "chrome" -ErrorAction SilentlyContinue | Stop-Process -Force
+    taskkill /F /IM chrome.exe /T 2>$null
     Start-Sleep -Seconds 2
+    Write-Host "  Opening Chrome with extension..." -ForegroundColor Yellow
     Start-Process -FilePath $ChromePath -ArgumentList "--load-extension=`"$ExtensionDir`""
     Write-Host "  Chrome relaunched with Tab Monitor extension!" -ForegroundColor Green
 } else {
-    Write-Host "  Chrome not found. Please launch Chrome manually." -ForegroundColor DarkYellow
+    Write-Host "  Chrome executable not found. Please launch Chrome manually using your shortcut." -ForegroundColor DarkYellow
 }
 
 Write-Host "`n==========================================" -ForegroundColor Green
 Write-Host "       Installation Complete!             " -ForegroundColor Green
 Write-Host "==========================================" -ForegroundColor Green
 Write-Host "Tab Monitor Tray App is running!" -ForegroundColor Cyan
-Write-Host "`nIf the extension is not visible in Chrome:" -ForegroundColor Yellow
+Write-Host "`nIf Chrome doesn't open with the extension automatically:" -ForegroundColor Yellow
+Write-Host "Open Chrome using your desktop shortcut, or:" -ForegroundColor White
 Write-Host "1. Open chrome://extensions in Chrome" -ForegroundColor White
 Write-Host "2. Enable 'Developer mode' (toggle top right)" -ForegroundColor White
 Write-Host "3. Click 'Load unpacked' & select folder:" -ForegroundColor White
