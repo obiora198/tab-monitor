@@ -1,6 +1,31 @@
-import { getTabThreshold, getRecommendedTabsToClose } from './tabTracker.js';
+// ===== Tab Tracker Logic (inlined from tabTracker.js) =====
+const DEFAULT_TAB_THRESHOLD = 15;
 
-// Connection to Native Messaging Host
+async function getTabThreshold() {
+  const result = await chrome.storage.sync.get({ tabThreshold: DEFAULT_TAB_THRESHOLD });
+  return result.tabThreshold;
+}
+
+async function getRecommendedTabsToClose() {
+  const tabs = await chrome.tabs.query({});
+  
+  const closableTabs = tabs.filter(tab => {
+    if (tab.active) return false;
+    if (tab.pinned) return false;
+    if (tab.audible) return false;
+    return true;
+  });
+
+  closableTabs.sort((a, b) => {
+    const aTime = a.lastAccessed || 0;
+    const bTime = b.lastAccessed || 0;
+    return aTime - bTime;
+  });
+
+  return closableTabs.slice(0, 5);
+}
+
+// ===== Native Messaging =====
 let nativePort = null;
 const NATIVE_HOST_NAME = 'com.tabmonitor.host';
 
