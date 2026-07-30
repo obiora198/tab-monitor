@@ -34,10 +34,10 @@ window.addEventListener("DOMContentLoaded", async () => {
   // Avatar Images
   const avatarImg = document.getElementById("avatarImg");
   const warningAvatars = [
-    "./assets/pointing at you.png",
-    "./assets/pointing at the tab.png"
+    "./assets/pointing_at_you.png",
+    "./assets/pointing_at_tab.png"
   ];
-  const successAvatar = "./assets/thumbs up.png";
+  const successAvatar = "./assets/thumbs_up.png";
 
   let currentAvatarIdx = 0;
   let isSuccessState = false;
