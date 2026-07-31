@@ -258,7 +258,21 @@ pub fn run() {
                         }
                     }
                     "settings" => {
-                        let _ = tauri_plugin_opener::open_url("chrome://extensions/?id=lcjcnebnibfdgjglmaojjmbndkcfffki", None::<&str>);
+                        let url = "chrome://extensions/?id=lcjcnebnibfdgjglmaojjmbndkcfffki";
+                        let mut opened = false;
+                        for path in &[
+                            "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+                            "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe"
+                        ] {
+                            if std::path::Path::new(path).exists() {
+                                let _ = std::process::Command::new(path).arg(url).spawn();
+                                opened = true;
+                                break;
+                            }
+                        }
+                        if !opened {
+                            let _ = std::process::Command::new("cmd").args(["/c", "start", "chrome", url]).spawn();
+                        }
                     }
                     _ => {}
                 })
