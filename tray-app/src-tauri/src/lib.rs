@@ -14,6 +14,7 @@ use windows::Win32::System::ProcessStatus::{K32GetProcessMemoryInfo, PROCESS_MEM
 
 struct AppState {
     writer: Arc<Mutex<Option<tokio::net::tcp::OwnedWriteHalf>>>,
+    is_paused: Arc<std::sync::atomic::AtomicBool>,
 }
 
 #[derive(serde::Serialize, Clone, Debug)]
@@ -185,27 +186,30 @@ async fn start_server(app: AppHandle) {
                                     json["desktopApps"] = serde_json::to_value(desktop_apps).unwrap_or_default();
                                     let _ = app_clone.emit("tab-warning", json);
                                 } else {
-                                    let desktop_apps = get_desktop_apps();
-                                    json["desktopApps"] = serde_json::to_value(desktop_apps).unwrap_or_default();
+                                    let is_paused = app_clone.state::<AppState>().is_paused.load(std::sync::atomic::Ordering::Relaxed);
+                                    if !is_paused {
+                                        let desktop_apps = get_desktop_apps();
+                                        json["desktopApps"] = serde_json::to_value(desktop_apps).unwrap_or_default();
 
-                                    // Send the event to the frontend
-                                    let _ = app_clone.emit("tab-warning", json);
-                                    
-                                    // Show and position the window bottom right
-                                    if let Some(window) = app_clone.get_webview_window("main") {
-                                        let _ = window.set_shadow(false);
-                                        if let Ok(Some(monitor)) = window.current_monitor() {
-                                            let monitor_size = monitor.size();
-                                            let window_size = window.outer_size().unwrap_or_default();
-                                            
-                                            // 20px right margin, 60px bottom margin (for taskbar)
-                                            let x = monitor_size.width.saturating_sub(window_size.width).saturating_sub(20);
-                                            let y = monitor_size.height.saturating_sub(window_size.height).saturating_sub(60);
-                                            
-                                            let _ = window.set_position(tauri::PhysicalPosition::new(x, y));
+                                        // Send the event to the frontend
+                                        let _ = app_clone.emit("tab-warning", json);
+                                        
+                                        // Show and position the window bottom right
+                                        if let Some(window) = app_clone.get_webview_window("main") {
+                                            let _ = window.set_shadow(false);
+                                            if let Ok(Some(monitor)) = window.current_monitor() {
+                                                let monitor_size = monitor.size();
+                                                let window_size = window.outer_size().unwrap_or_default();
+                                                
+                                                // 20px right margin, 60px bottom margin (for taskbar)
+                                                let x = monitor_size.width.saturating_sub(window_size.width).saturating_sub(20);
+                                                let y = monitor_size.height.saturating_sub(window_size.height).saturating_sub(60);
+                                                
+                                                let _ = window.set_position(tauri::PhysicalPosition::new(x, y));
+                                            }
+                                            let _ = window.show();
+                                            let _ = window.set_focus();
                                         }
-                                        let _ = window.show();
-                                        let _ = window.set_focus();
                                     }
                                 }
                             }
@@ -221,18 +225,40 @@ async fn start_server(app: AppHandle) {
 pub fn run() {
     tauri::Builder::default()
         .setup(|app| {
+            let is_paused = Arc::new(std::sync::atomic::AtomicBool::new(false));
+            let is_paused_clone = is_paused.clone();
+            
             let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
             let settings_i = MenuItem::with_id(app, "settings", "Settings", true, None::<&str>)?;
             let pause_i = MenuItem::with_id(app, "pause", "Pause Monitoring", true, None::<&str>)?;
             
             let menu = Menu::with_items(app, &[&settings_i, &pause_i, &quit_i])?;
 
+            let pause_i_handle = pause_i.clone();
+
             let _tray = TrayIconBuilder::new()
                 .menu(&menu)
                 .icon(app.default_window_icon().unwrap().clone())
-                .on_menu_event(|app, event| match event.id.as_ref() {
+                .on_menu_event(move |app, event| match event.id.as_ref() {
                     "quit" => {
                         app.exit(0);
+                    }
+                    "pause" => {
+                        let currently_paused = is_paused_clone.load(std::sync::atomic::Ordering::Relaxed);
+                        let next_state = !currently_paused;
+                        is_paused_clone.store(next_state, std::sync::atomic::Ordering::Relaxed);
+                        
+                        if next_state {
+                            let _ = pause_i_handle.set_text("Resume Monitoring");
+                            if let Some(window) = app.get_webview_window("main") {
+                                let _ = window.hide();
+                            }
+                        } else {
+                            let _ = pause_i_handle.set_text("Pause Monitoring");
+                        }
+                    }
+                    "settings" => {
+                        let _ = tauri_plugin_opener::open_url("chrome://extensions/?id=lcjcnebnibfdgjglmaojjmbndkcfffki", None::<&str>);
                     }
                     _ => {}
                 })
@@ -240,6 +266,7 @@ pub fn run() {
 
             app.manage(AppState {
                 writer: Arc::new(Mutex::new(None)),
+                is_paused,
             });
 
             // Start tcp server for native messaging host

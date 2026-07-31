@@ -42,6 +42,8 @@ In addition to automated background installation, Tab Monitor Scout can be loade
   - **Native Messaging Host (Rust)**: Handles secure IPC communication between Chrome and the Windows OS.
   - **Tauri Tray App (Rust/JS)**: Renders a frameless, transparent overlay window with smooth animations and zero glassy border artifacts.
 - **🎯 Smart Tab Selection**: Intelligently recommends closing tabs that are inactive, unpinned, and not playing audio.
+- **⚙️ Custom Tab Limit Threshold**: Easily adjust the tab threshold limit by opening Extension Options (`chrome://extensions` -> Extension Details -> Extension options, or via Chrome extension icon popup settings).
+- **⏸️ System Tray Pause / Resume**: Right-click the system tray icon to toggle **"Pause Monitoring"** / **"Resume Monitoring"** or access **Settings**.
 - **💻 Desktop Heavy Process Detection**: Scans Windows OS running processes for memory-intensive desktop apps.
 - **🔒 Pinned Extension Security**: Uses a fixed RSA 2048 public key in `manifest.json` ensuring identical Extension IDs across any computer.
 - **⚡ Automated 1-Click Installer**: Complete UAC self-elevating setup script that configures Chrome native messaging keys and desktop shortcuts.
