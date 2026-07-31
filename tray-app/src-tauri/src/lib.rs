@@ -133,6 +133,26 @@ async fn focus_tab(app: AppHandle, tab_id: u32, window_id: Option<u32>) -> Resul
 }
 
 #[tauri::command]
+async fn open_options_page(app: AppHandle) -> Result<(), String> {
+    let state = app.state::<AppState>();
+    let mut writer_opt = state.writer.lock().await;
+    
+    if let Some(writer) = writer_opt.as_mut() {
+        let msg = serde_json::json!({
+            "action": "OPEN_OPTIONS"
+        }).to_string();
+        
+        let msg_bytes = msg.as_bytes();
+        let len_bytes = (msg_bytes.len() as u32).to_ne_bytes();
+        
+        if writer.write_all(&len_bytes).await.is_ok() && writer.write_all(msg_bytes).await.is_ok() {
+            return Ok(());
+        }
+    }
+    Err("Failed to send OPEN_OPTIONS command to Chrome".into())
+}
+
+#[tauri::command]
 fn focus_desktop_app(hwnd: isize) {
     unsafe {
         let _ = SetForegroundWindow(HWND(hwnd));
@@ -258,21 +278,10 @@ pub fn run() {
                         }
                     }
                     "settings" => {
-                        let url = "chrome://extensions/?id=lcjcnebnibfdgjglmaojjmbndkcfffki";
-                        let mut opened = false;
-                        for path in &[
-                            "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-                            "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe"
-                        ] {
-                            if std::path::Path::new(path).exists() {
-                                let _ = std::process::Command::new(path).arg(url).spawn();
-                                opened = true;
-                                break;
-                            }
-                        }
-                        if !opened {
-                            let _ = std::process::Command::new("cmd").args(["/c", "start", "chrome", url]).spawn();
-                        }
+                        let app_handle = app.clone();
+                        tauri::async_runtime::spawn(async move {
+                            let _ = open_options_page(app_handle).await;
+                        });
                     }
                     _ => {}
                 })
@@ -292,7 +301,7 @@ pub fn run() {
             Ok(())
         })
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![close_tabs, focus_tab, focus_desktop_app, close_desktop_app, hide_window])
+        .invoke_handler(tauri::generate_handler![close_tabs, focus_tab, open_options_page, focus_desktop_app, close_desktop_app, hide_window])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

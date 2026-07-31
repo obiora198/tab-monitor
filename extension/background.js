@@ -44,6 +44,12 @@ function connectNativeHost() {
       if (msg.windowId) {
         chrome.windows.update(msg.windowId, { focused: true });
       }
+    } else if (msg.action === 'OPEN_OPTIONS') {
+      if (chrome.runtime.openOptionsPage) {
+        chrome.runtime.openOptionsPage();
+      } else {
+        chrome.tabs.create({ url: chrome.runtime.getURL('options.html') });
+      }
     }
   });
 
